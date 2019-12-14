@@ -53,7 +53,9 @@ class LoginVC: UIViewController {
         let button = UIButton(type: .system)
         let attributedTitle = NSMutableAttributedString(string: "Don't have an account?   ", attributes: [.font: UIFont.systemFont(ofSize: 14), .foregroundColor: UIColor.lightGray])
         attributedTitle.append(NSAttributedString(string: "Sign up", attributes: [.font: UIFont.boldSystemFont(ofSize: 14), .foregroundColor: UIColor(red: 17/255, green: 154/255, blue: 237/255, alpha: 1)]))
+         button.addTarget(self, action: #selector(handleShowSignUp), for: .touchUpInside)
         button.setAttributedTitle(attributedTitle, for: .normal)
+       
         return button
     }()
     
@@ -62,6 +64,8 @@ class LoginVC: UIViewController {
         
         view.backgroundColor = .white
         
+        navigationController?.navigationBar.isHidden = true 
+        
         view.addSubview(logoContainerView)
         logoContainerView.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: nil, trailing: view.trailingAnchor, size: .init(width: 0, height: 150))
         
@@ -69,6 +73,11 @@ class LoginVC: UIViewController {
         
         view.addSubview(dontHaveAccountButton)
         dontHaveAccountButton.anchor(top: nil, leading: view.leadingAnchor, bottom: view.bottomAnchor, trailing: view.trailingAnchor, padding: .init(top: 0, left: 0, bottom: 0, right: 0), size: .init(width: 0, height: 50))
+    }
+    
+    @objc func handleShowSignUp() {
+        let signUpVC = SignUpVC()
+        navigationController?.pushViewController(signUpVC, animated: true)
     }
     
     func configureViewComponents() {
