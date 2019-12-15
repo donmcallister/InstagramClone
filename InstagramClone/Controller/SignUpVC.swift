@@ -103,20 +103,42 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
     let registrationViewModel = RegistrationViewModel()
     
     fileprivate func setupRegistrationViewModelObserver() {
-        registrationViewModel.isFormValidObserver = { [unowned self] (isFormValid) in
-            print("Form is changing, is it valid?", isFormValid)
-            
-            self.signUpButton.isEnabled = isFormValid
-            if isFormValid && self.imageSelected == true {
-                 self.signUpButton.backgroundColor = UIColor(red: 17/255, green: 154/255, blue: 237/255, alpha: 1)
-            } else {
-                self.signUpButton.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
-            }
+        //bindable
+        registrationViewModel.bindableIsFormValid.bind { [unowned self] (isFormValid) in
+            guard let isFormValid = isFormValid else { return }
+             print("Form is changing, is it valid?", isFormValid)
+                       
+                       self.signUpButton.isEnabled = isFormValid
+            //  if isFormValid && self.imageSelected == true {
+                       if isFormValid == true {
+                            self.signUpButton.backgroundColor = UIColor(red: 17/255, green: 154/255, blue: 237/255, alpha: 1)
+                       } else {
+                           self.signUpButton.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
+                       }
         }
-        registrationViewModel.imageObserver = { [unowned self] profileImage in
-            self.plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
-            self.dismiss(animated: true, completion: nil)
+        
+        //old observer code:
+//        registrationViewModel.isFormValidObserver = { [unowned self] (isFormValid) in
+//            print("Form is changing, is it valid?", isFormValid)
+//
+//            self.signUpButton.isEnabled = isFormValid
+//            if isFormValid && self.imageSelected == true {
+//                 self.signUpButton.backgroundColor = UIColor(red: 17/255, green: 154/255, blue: 237/255, alpha: 1)
+//            } else {
+//                self.signUpButton.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
+//            }
+//        }
+        
+        // viewModel tracks registration now.. and will bind like the observer code before
+        registrationViewModel.bindableImage.bind { [unowned self] (profileImage) in
+                self.plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
+                    self.dismiss(animated: true, completion: nil)
         }
+        // observer:
+//        registrationViewModel.imageObserver = { [unowned self] profileImage in
+//            self.plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
+//            self.dismiss(animated: true, completion: nil)
+//        }
     }
     
     
@@ -130,7 +152,8 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
         
         //set imageSelected to true:
         imageSelected = true
-        registrationViewModel.image = profileImage
+        registrationViewModel.bindableImage.value = profileImage //bindable
+     //   registrationViewModel.image = profileImage //observer
         
         //configure plusPhotoBtn with selected image
         plusPhotoBtn.layer.cornerRadius = plusPhotoBtn.frame.width / 2
