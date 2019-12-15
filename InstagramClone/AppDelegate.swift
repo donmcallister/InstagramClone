@@ -23,7 +23,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.rootViewController = navController
         
         FirebaseApp.configure()
-       
+//        let db = Firestore.firestore()
+      
+        
         
         return true
     }

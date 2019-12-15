@@ -186,6 +186,7 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
                 self?.showHUDWithError(error: err)
                 return
             }
+            print("finished registering our user")
         }
 
       
