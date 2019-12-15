@@ -116,29 +116,12 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
                            self.signUpButton.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
                        }
         }
-        
-        //old observer code:
-//        registrationViewModel.isFormValidObserver = { [unowned self] (isFormValid) in
-//            print("Form is changing, is it valid?", isFormValid)
-//
-//            self.signUpButton.isEnabled = isFormValid
-//            if isFormValid && self.imageSelected == true {
-//                 self.signUpButton.backgroundColor = UIColor(red: 17/255, green: 154/255, blue: 237/255, alpha: 1)
-//            } else {
-//                self.signUpButton.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
-//            }
-//        }
-        
-        // viewModel tracks registration now.. and will bind like the observer code before
+
         registrationViewModel.bindableImage.bind { [unowned self] (profileImage) in
                 self.plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
                     self.dismiss(animated: true, completion: nil)
         }
-        // observer:
-//        registrationViewModel.imageObserver = { [unowned self] profileImage in
-//            self.plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
-//            self.dismiss(animated: true, completion: nil)
-//        }
+ 
     }
     
     
@@ -153,16 +136,13 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
         //set imageSelected to true:
         imageSelected = true
         registrationViewModel.bindableImage.value = profileImage //bindable
-     //   registrationViewModel.image = profileImage //observer
         
         //configure plusPhotoBtn with selected image
         plusPhotoBtn.layer.cornerRadius = plusPhotoBtn.frame.width / 2
         plusPhotoBtn.layer.masksToBounds = true
         plusPhotoBtn.layer.borderColor = UIColor.black.cgColor
         plusPhotoBtn.layer.borderWidth = 2
-        //move below to setupRegistrationViewModelObserver():
-//        plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
-//        self.dismiss(animated: true, completion: nil)
+    
     }
     
     @objc func handleSelectProfilePhoto() {
@@ -180,12 +160,15 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
     }
     
     fileprivate func showHUDWithError(error: Error) {
+        registeringHUD.dismiss(animated: true)
         let hud = JGProgressHUD(style: .dark)
         hud.textLabel.text = "Failed registration"
         hud.detailTextLabel.text = error.localizedDescription
         hud.show(in: self.view)
         hud.dismiss(afterDelay: 4)
     }
+    
+    let registeringHUD = JGProgressHUD(style: .dark)
     
     @objc func handleSignUp() {
       //  self.handleTapDismiss() // TO DO
@@ -195,6 +178,8 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
         guard let fullname = fullNameTextField.text else { return }
         guard let username = usernameTextField.text else { return }
         
+        registeringHUD.textLabel.text = "Register"
+        registeringHUD.show(in: view)
         
         Auth.auth().createUser(withEmail: email, password: password) { (authResult, error) in
             //handle error
@@ -205,28 +190,40 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
             
             print("Successfully registered user:", authResult?.user.uid ?? "")
             
-            //set profile image
-            guard let profileImg = self.plusPhotoBtn.imageView?.image else { return }
-            
-            //upload data
-            guard let uploadData = profileImg.jpegData(compressionQuality: 0.3) else { return }
+//            //set profile image
+//            guard let profileImg = self.plusPhotoBtn.imageView?.image else { return }
+//
+//            //upload data
+//            guard let uploadData = profileImg.jpegData(compressionQuality: 0.3) else { return }
             
             //place image in firebase storage
             let filename = NSUUID().uuidString
             
             // UPDATE: - In order to get download URL must add filename to storage ref like this
             let storageRef = Storage.storage().reference(withPath: "/images/\(filename)")
-            
-            storageRef.putData(uploadData, metadata: nil, completion: { (metadata, error) in
+            let imageData = self.registrationViewModel.bindableImage.value?.jpegData(compressionQuality: 0.3) ?? Data()
+            storageRef.putData(imageData, metadata: nil, completion: { (metadata, error) in
                 
                 // handle error
                 if let error = error {
-                    print("Failed to upload image to Firebase Storage with error", error.localizedDescription)
+                    self.showHUDWithError(error: error)
+//                    print("Failed to upload image to Firebase Storage with error", error.localizedDescription)
                     return
                 }
                 
+                print("Finished uploading image to storage")
+                
                 // UPDATE: - Firebase 5 must now retrieve download url
                 storageRef.downloadURL(completion: { (downloadURL, error) in
+                    
+                    if let error = error {
+                        self.showHUDWithError(error: error)
+                        return
+                    }
+                    
+                    self.registeringHUD.dismiss()
+                    print("Download url of our image is: ", downloadURL?.absoluteString ?? "")
+                    
                     guard let profileImageUrl = downloadURL?.absoluteString else {
                         print("DEBUG: Profile image url is nil")
                         return
