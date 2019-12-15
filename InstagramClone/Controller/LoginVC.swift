@@ -28,6 +28,7 @@ class LoginVC: UIViewController {
         tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
         tf.borderStyle = .roundedRect
         tf.font = UIFont.systemFont(ofSize: 14)
+        tf.addTarget(self, action: #selector(handleTextChange), for: .editingChanged)
         return tf
     }()
     
@@ -37,6 +38,7 @@ class LoginVC: UIViewController {
           tf.backgroundColor = UIColor(white: 0, alpha: 0.03)
           tf.borderStyle = .roundedRect
           tf.font = UIFont.systemFont(ofSize: 14)
+          tf.addTarget(self, action: #selector(handleTextChange), for: .editingChanged)
           return tf
       }()
     
@@ -46,6 +48,8 @@ class LoginVC: UIViewController {
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
         button.layer.cornerRadius = 5
+        button.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
+        button.isEnabled = false
         return button
     }()
     
@@ -73,6 +77,38 @@ class LoginVC: UIViewController {
         
         view.addSubview(dontHaveAccountButton)
         dontHaveAccountButton.anchor(top: nil, leading: view.leadingAnchor, bottom: view.bottomAnchor, trailing: view.trailingAnchor, padding: .init(top: 0, left: 0, bottom: 0, right: 0), size: .init(width: 0, height: 50))
+    }
+    
+    @objc func handleLogin() {
+        print(123)
+    }
+    
+    @objc func handleTextChange(textField: UITextField) {
+        if textField == emailTextField {
+            print("email changing")
+        } else if textField == passwordTextField {
+            print("password changing")
+        }
+        
+        guard emailTextField.hasText,
+        passwordTextField.hasText else {
+            loginButton.isEnabled = false
+            loginButton.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
+            return
+        }
+        
+        loginButton.isEnabled = true
+        loginButton.backgroundColor = UIColor(red: 17/255, green: 154/255, blue: 237/255, alpha: 1)
+        
+//        let isFormValid = emailTextField.text?.isEmpty == false && passwordTextField.text?.isEmpty == false
+//        loginButton.isEnabled = isFormValid
+//        
+//        if isFormValid {
+//            loginButton.backgroundColor = UIColor(red: 17/255, green: 154/255, blue: 237/255, alpha: 1)
+//        } else {
+//            loginButton.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
+//        }
+        
     }
     
     @objc func handleShowSignUp() {
