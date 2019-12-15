@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import JGProgressHUD
 
 class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
@@ -148,6 +149,14 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
         _ = navigationController?.popViewController(animated: true)
     }
     
+    fileprivate func showHUDWithError(error: Error) {
+        let hud = JGProgressHUD(style: .dark)
+        hud.textLabel.text = "Failed registration"
+        hud.detailTextLabel.text = error.localizedDescription
+        hud.show(in: self.view)
+        hud.dismiss(afterDelay: 4)
+    }
+    
     @objc func handleSignUp() {
         //properties
         guard let email = emailTextField.text else { return }
@@ -160,6 +169,7 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
             //handle error
             if let error = error {
                 print("Failed to create user with error: ", error.localizedDescription)
+                self.showHUDWithError(error:error)
             }
             
             //set profile image
