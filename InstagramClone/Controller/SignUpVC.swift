@@ -17,6 +17,8 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
     let plusPhotoBtn: UIButton = {
         let button = UIButton()
         button.setImage(#imageLiteral(resourceName: "plus_photo").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFill
+        button.clipsToBounds = true 
         button.addTarget(self, action: #selector(handleSelectProfilePhoto), for: .touchUpInside)
         return button
     }()
@@ -110,7 +112,10 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
             } else {
                 self.signUpButton.backgroundColor = UIColor(red: 149/255, green: 204/255, blue: 244/255, alpha: 1)
             }
-            
+        }
+        registrationViewModel.imageObserver = { [unowned self] profileImage in
+            self.plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
+            self.dismiss(animated: true, completion: nil)
         }
     }
     
@@ -125,14 +130,16 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
         
         //set imageSelected to true:
         imageSelected = true
+        registrationViewModel.image = profileImage
         
         //configure plusPhotoBtn with selected image
         plusPhotoBtn.layer.cornerRadius = plusPhotoBtn.frame.width / 2
         plusPhotoBtn.layer.masksToBounds = true
         plusPhotoBtn.layer.borderColor = UIColor.black.cgColor
         plusPhotoBtn.layer.borderWidth = 2
-        plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
-        self.dismiss(animated: true, completion: nil)
+        //move below to setupRegistrationViewModelObserver():
+//        plusPhotoBtn.setImage(profileImage?.withRenderingMode(.alwaysOriginal), for: .normal)
+//        self.dismiss(animated: true, completion: nil)
     }
     
     @objc func handleSelectProfilePhoto() {
@@ -158,6 +165,7 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
     }
     
     @objc func handleSignUp() {
+      //  self.handleTapDismiss() // TO DO
         //properties
         guard let email = emailTextField.text else { return }
         guard let password = passwordTextField.text else { return }
@@ -171,6 +179,8 @@ class SignUpVC: UIViewController, UIImagePickerControllerDelegate, UINavigationC
                 print("Failed to create user with error: ", error.localizedDescription)
                 self.showHUDWithError(error:error)
             }
+            
+            print("Successfully registered user:", authResult?.user.uid ?? "")
             
             //set profile image
             guard let profileImg = self.plusPhotoBtn.imageView?.image else { return }
